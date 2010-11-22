@@ -35,7 +35,7 @@ public:
     HeadlessSpecRunner();
     void load(const QString &spec);
 public slots:
-    void log(int indent, const QString &msg);
+    void log(int indent, const QString &msg, const QString &clazz);
 private slots:
     void watch(bool ok);
 protected:
@@ -78,15 +78,19 @@ bool HeadlessSpecRunner::hasElement(const char *select)
     return !m_page.mainFrame()->findFirstElement(select).isNull();
 }
 
-void HeadlessSpecRunner::log(int indent, const QString &msg)
+void HeadlessSpecRunner::log(int indent, const QString &msg, const QString &clazz)
 {
     for (int i = 0; i < indent; ++i)
         std::cout << "  ";
-    std::cout << qPrintable(msg);
+    if ( clazz.endsWith("fail") ) {
+        std::cout << "\033[0;31m" << qPrintable(msg) << "\033[m";
+    } else {
+        std::cout << qPrintable(msg);
+    }
     std::cout << std::endl;
 }
 
-#define DUMP_MSG "(function(n, i) { if (n.toString() === '[object NodeList]') { for (var c = 0; c < n.length; ++c) arguments.callee(n[c], i); return } if (n.className === 'description' || n.className == 'resultMessage fail') debug.log(i, n.textContent); var e = n.firstElementChild; while (e) { arguments.callee(e, i + 1); e = e.nextElementSibling; } })(document.getElementsByClassName('suite failed'), 1);"
+#define DUMP_MSG "(function(n, i) { if (n.toString() === '[object NodeList]') { for (var c = 0; c < n.length; ++c) arguments.callee(n[c], i); return } if (n.className === 'description' || n.className == 'resultMessage fail') debug.log(i, n.textContent, n.className); var e = n.firstElementChild; while (e) { arguments.callee(e, i + 1); e = e.nextElementSibling; } })(document.getElementsByClassName('suite failed'), 1);"
 
 void HeadlessSpecRunner::timerEvent(QTimerEvent *event)
 {
