@@ -35,7 +35,8 @@ public:
     HeadlessSpecRunner();
     void load(const QString &spec);
 public slots:
-    void log(int indent, const QString &msg, const QString &clazz);
+    void log(const QString &msg);
+    void specLog(int indent, const QString &msg, const QString &clazz);
 private slots:
     void watch(bool ok);
 protected:
@@ -58,6 +59,7 @@ HeadlessSpecRunner::HeadlessSpecRunner()
 void HeadlessSpecRunner::load(const QString &spec)
 {
     m_ticker.stop();
+    m_page.mainFrame()->addToJavaScriptWindowObject("debug", this);
     m_page.mainFrame()->load(spec);
     m_page.setPreferredContentsSize(QSize(1024, 600));
 }
@@ -78,14 +80,21 @@ bool HeadlessSpecRunner::hasElement(const char *select)
     return !m_page.mainFrame()->findFirstElement(select).isNull();
 }
 
-void HeadlessSpecRunner::log(int indent, const QString &msg, const QString &clazz)
+void HeadlessSpecRunner::log(const QString &msg)
+{
+  std::cout << "\033[0;32m" << "[console] " << "\033[m";
+  std::cout << qPrintable(msg);
+  std::cout << std::endl;
+}
+
+void HeadlessSpecRunner::specLog(int indent, const QString &msg, const QString &clazz)
 {
     for (int i = 0; i < indent; ++i)
         std::cout << "  ";
     if ( clazz.endsWith("fail") ) {
         std::cout << "\033[0;31m" << qPrintable(msg) << "\033[m";
     } else {
-        std::cout << qPrintable(msg);
+        std::cout << "\033[0;33m" << qPrintable(msg) << "\033[m";
     }
     std::cout << std::endl;
 }
@@ -95,7 +104,7 @@ void HeadlessSpecRunner::log(int indent, const QString &msg, const QString &claz
     for (var c = 0; c < n.length; ++c) arguments.callee(n[c], i); return \
   }\
   if (n.className === 'description' || n.className == 'resultMessage fail') {\
-    debug.log(i, n.textContent, n.className);\
+    debug.specLog(i, n.textContent, n.className);\
   }\
   var e = n.firstElementChild;\
   while (e) {\
@@ -114,15 +123,14 @@ void HeadlessSpecRunner::timerEvent(QTimerEvent *event)
 
     if (hasElement(".runner.passed")) {
         QWebElement desc = m_page.mainFrame()->findFirstElement(".description");
-        std::cout << qPrintable(desc.toPlainText()) << std::endl;
+        std::cout << "\033[0;32m" << qPrintable(desc.toPlainText()) << "\033[m" << std::endl;
         QApplication::instance()->exit(0);
         return;
     }
 
     if (hasElement(".runner.failed")) {
         QWebElement desc = m_page.mainFrame()->findFirstElement(".description");
-        std::cout << "FAIL: " << qPrintable(desc.toPlainText()) << std::endl;
-        m_page.mainFrame()->addToJavaScriptWindowObject("debug", this);
+        std::cout << "\033[0;31m" << "FAIL: " << qPrintable(desc.toPlainText()) << "\033[m" << std::endl;
         m_page.mainFrame()->evaluateJavaScript(DUMP_MSG);
 //QDesktopServices::openUrl(m_page.mainFrame()->url());
         QApplication::instance()->exit(1);
