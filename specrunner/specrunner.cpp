@@ -86,7 +86,19 @@ void HeadlessSpecRunner::log(int indent, const QString &msg)
     std::cout << std::endl;
 }
 
-#define DUMP_MSG "(function(n, i) { if (n.toString() === '[object NodeList]') { for (var c = 0; c < n.length; ++c) arguments.callee(n[c], i); return } if (n.className === 'description' || n.className == 'resultMessage fail') debug.log(i, n.textContent); var e = n.firstElementChild; while (e) { arguments.callee(e, i + 1); e = e.nextElementSibling; } })(document.getElementsByClassName('suite failed'), 1);"
+#define DUMP_MSG "(function(n, i) { \
+  if (n.toString() === '[object NodeList]') { \
+    for (var c = 0; c < n.length; ++c) arguments.callee(n[c], i); return \
+  }\
+  if (n.className === 'description' || n.className == 'resultMessage fail') {\
+    debug.log(i, n.textContent);\
+  }\
+  var e = n.firstElementChild;\
+  while (e) {\
+    arguments.callee(e, i + 1); e = e.nextElementSibling; \
+  }\
+  n.className = '';\
+})(document.getElementsByClassName('suite failed'), 1);"
 
 void HeadlessSpecRunner::timerEvent(QTimerEvent *event)
 {
@@ -108,7 +120,7 @@ void HeadlessSpecRunner::timerEvent(QTimerEvent *event)
         std::cout << "FAIL: " << qPrintable(desc.toPlainText()) << std::endl;
         m_page.mainFrame()->addToJavaScriptWindowObject("debug", this);
         m_page.mainFrame()->evaluateJavaScript(DUMP_MSG);
-        QDesktopServices::openUrl(m_page.mainFrame()->url());
+//QDesktopServices::openUrl(m_page.mainFrame()->url());
         QApplication::instance()->exit(1);
         return;
     }
