@@ -123,7 +123,7 @@ void HeadlessSpecRunner::timerEvent(QTimerEvent *event)
 
     if (hasElement(".runner.passed")) {
         QWebElement desc = m_page.mainFrame()->findFirstElement(".description");
-        std::cout << "\033[0;32m" << qPrintable(desc.toPlainText()) << "\033[m" << std::endl;
+        std::cout << "\033[0;32m" << "PASS: " << qPrintable(desc.toPlainText()) << "\033[m" << std::endl;
         QApplication::instance()->exit(0);
         return;
     }
