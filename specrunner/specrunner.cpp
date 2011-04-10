@@ -111,7 +111,7 @@ void HeadlessSpecRunner::specLog(int indent, const QString &msg, const QString &
     arguments.callee(e, i + 1); e = e.nextElementSibling; \
   }\
   n.className = '';\
-})(document.getElementsByClassName('suite failed'), 1);"
+})(document.getElementsByClassName('suite failed'), 0);"
 
 void HeadlessSpecRunner::timerEvent(QTimerEvent *event)
 {
